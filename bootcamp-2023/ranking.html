@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<meta name="author" content="CP-UPV">
+		<meta name="author" content="Rodrigo Llanes Lacomba">
+	
+        <title>Bootcamp 2023 Ranking</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vquery/5.0.1/v.min.js" integrity="sha512-JTaEfpc0EjojckV4ObScEHC2yHkDKUXEC5xO4Yb8upLDUR/2clSQKloqw6Ocp66a7dW689eKo0b/KC9C+T6osg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>        
+        <script>
+			groupCode = "BPDxqa3seU";
+            apiKey = "060574c724691c0fce64f54c98fb43b633fc6a75";
+            secret = "07b21f4f04f800949a672261ce8ad191419241c8";
+
+            //https://stackoverflow.com/a/48161723/19424491
+            async function sha256(message) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            }
+            
+            //https://stackoverflow.com/a/55926440/19424491
+            async function sha512(str) {
+                return await crypto.subtle.digest("SHA-512", new TextEncoder("utf-8").encode(str)).then(buf => {
+                    return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
+                });
+            }
+            
+            async function get(path, params) {
+                const time = Math.floor(Date.now()/1000);
+                var apiSig = Math.random().toString().substr(2, 6);
+                
+                params.apiKey = apiKey;
+                params.time = time;
+                
+                params = Object.entries(params).sort().map(x => `${x[0]}=${x[1]}`).join('&');
+
+                var hash = `${apiSig}/${path}?${params}#${secret}`;
+                hash = await sha512(hash);
+                apiSig += hash;
+
+                const query = `https://codeforces.com/api/${path}?${params}&apiSig=${apiSig}`;
+                
+                return new Promise(function (resolve, reject) {
+                    var r = new XMLHttpRequest();
+                    r.open("GET", query, true);
+                    r.onreadystatechange = function () {
+                        if (r.readyState != 4) { return; }
+                        else { resolve(JSON.parse(r.responseText)); }
+                    };
+                    r.send();
+                });
+            }
+
+            function insertRow(tableId, elements) {
+                var tbodyRef = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+
+                var newRow = tbodyRef.insertRow();
+
+                elements.forEach(function(content){
+                    var newCell = newRow.insertCell();
+                    if (typeof content === 'string' || content instanceof String || typeof(content) == 'number') {
+                        var newText = document.createTextNode(content);
+                        newCell.appendChild(newText);
+                    } else if (content != null) {
+                        content.forEach(x => newCell.appendChild(x));
+                    }
+                });
+            }
+
+            function insertHeader(tableId, elements) {
+                var tbodyRef = document.getElementById(tableId).getElementsByTagName('thead')[0];
+
+                var newRow = tbodyRef.insertRow();
+
+                elements.forEach(function(content){
+                    var newCell = newRow.insertCell();
+                    if (typeof content === 'string' || content instanceof String || typeof(content) == 'number') {
+                        var newText = document.createTextNode(content);
+                        newCell.appendChild(newText);
+                    } else if (content != null) {
+                        content.forEach(x => newCell.appendChild(x));
+                    }
+                });
+            }
+            
+            function render(status, problems) {
+                var results = {};
+                status.result.forEach(function(s) {
+                    if (s.author.participantType === "MANAGER") { return; }
+
+                    const author = s.author.members[0].handle;
+                    const index = s.problem.index;
+                    if (!(author in results)) {
+                        results[author] = {
+                            standings: problems.reduce((o, key) => ({ ...o, [key.index]: {time: null, tries:0}}), {}),
+                            start: s.creationTimeSeconds
+                        }
+                    }
+                    
+                    results[author].start = Math.min(results[author].start, s.creationTimeSeconds);
+                    results[author].standings[index].tries++;
+
+                    if (s.verdict !== "OK") { return; }
+                    
+                    if (results[author].standings[index].time == null) {
+                        results[author].standings[index].time = s.creationTimeSeconds;
+                    } else {
+                        results[author].standings[index].time = Math.min(results[author].standings[index].time, s.creationTimeSeconds);
+                    }
+                });
+                
+                var table = [];
+                Object.keys(results).forEach(function(author) {
+                    const r = results[author];
+                    var row = [author, 0, 0];
+                    Object.keys(r.standings).sort().forEach(function(i) {
+                        const s = r.standings[i];
+                        if (s.time != null) {
+                            var tries = s.tries - 1;
+                            const score = s.time - r.start;
+                            
+                            row[2] += 20 * tries + Math.floor(score / 60);
+                            row[1]++;
+
+                            if (tries == 0) { tries = '+'; }
+                            else { tries = `+${tries}`; }
+
+                            const days = Math.floor(score/(24*60*60));
+                            const hours = String(Math.floor((score%(24*60*60))/(60*60))).padStart(2, '0');
+                            const minuts = String(Math.floor((score%(60*60))/60)).padStart(2, '0');
+                            
+                            var span = document.createElement("span");
+                            span.appendChild(document.createTextNode(tries));
+                            span.classList.add("tries");
+                            
+                            row.push([
+                                span, 
+                                document.createElement("br"),
+                                document.createTextNode(`${days}d ${hours}:${minuts}`)
+                            ]);
+                        } else {
+                            row.push('')
+                        }
+                    });
+                    table.push(row);
+                });
+
+                var header = ['Who', '=', 'Penalty'];
+                problems.map(x => x.index).sort().forEach(x => header.push(x));
+                insertHeader('standings', header);
+
+                table.sort((a, b) => b[1] - a[1] || a[2] - b[2]).forEach(r => insertRow("standings", r) );
+                
+                console.log(problems);
+            }
+
+            async function update(contestId) {
+                const status = await get('contest.status', {contestId: contestId});
+                const problems = await get('contest.standings', {contestId: contestId});
+                console.log(status);
+                console.log(problems);
+				
+				if (status.status === 'FAILED') {
+					var message = document.getElementById("message");
+					message.innerHTML = "Contest not started yet";
+				} else {
+				    render(status, problems.result.problems);
+				}
+            }
+        </script>
+
+        <style>
+            td {
+                text-align: center;
+                min-width:50px;
+                height:40px;
+            }
+            table, th, td {
+                border: 1px solid #888;
+                border-collapse: collapse;
+            }
+
+            tbody tr:nth-child(odd) {
+                background-color: #f8f8f8;
+            }
+
+            tbody tr:nth-child(even) {
+                background-color: #ffffff;
+            }
+
+            thead {
+                font-weight: bold;
+            }
+
+            table {
+                background-color: #ffffff;
+            }
+
+            body {
+                font-family: verdana,arial,sans-serif;
+            }
+
+            .tries {
+                color: #0a0;
+                font-weight: bold;
+                font-size: 1.3rem;
+            }
+			
+			#message {
+				color: red;
+			}
+        </style>
+    </head>
+    <body>
+        <h1>Standings</h1>
+
+        <select id="contest" onchange="contestChanged()">
+            <option value="451675">Semana 1</option>
+            <option value="451835">Semana 2</option>
+            <option value="451845">Semana 3</option>
+            <option value="451846">Semana 4</option>
+            <option value="451847">Semana 5</option>
+            <option value="451853">Semana 6</option>
+            <option value="451852">Semana 7</option>
+            <option value="451851">Semana 8</option>
+            <option value="451850">Semana 9</option>
+            <option value="451849">Semana 10</option>
+            <option value="451848">Semana 11</option>
+        </select>
+
+        <br/>
+        <br/>
+
+        <table id="standings">
+            <thead></thead>
+            <tbody></tbody>
+            <!--<tfoot>
+              <tr>
+                <td>My Footer</td>
+              </tr>
+            </tfoot>-->
+        </table>
+		
+		<h2 id="message"></h2>
+
+        <script>
+            contestChanged();
+
+            function contestChanged() {
+                var table = document.getElementById("standings").getElementsByTagName('tbody')[0];
+                table.innerHTML = "";
+                var head = document.getElementById("standings").getElementsByTagName('thead')[0];
+                head.innerHTML = "";
+                var message = document.getElementById("message");
+                message.innerHTML = "";
+                update(document.getElementById("contest").value);
+            }
+        </script>
+    </body>
+</html>
