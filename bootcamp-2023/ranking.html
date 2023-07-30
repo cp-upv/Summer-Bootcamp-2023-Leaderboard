@@ -113,8 +113,12 @@
                 
                 var table = [];
                 Object.keys(results).forEach(function(author) {
+					var name = author;
+					if (name.includes("=")) {
+						name = name.split("=")[1];
+					}
                     const r = results[author];
-                    var row = [author, 0, 0];
+                    var row = [name, 0, 0];
                     Object.keys(r.standings).sort().forEach(function(i) {
                         const s = r.standings[i];
                         if (s.time != null) {
