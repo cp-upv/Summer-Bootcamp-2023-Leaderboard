@@ -87,7 +87,8 @@
             
             function render(status, problems) {
                 var results = {};
-                status.result.forEach(function(s) {
+                status.result.sort((a, b) => a.creationTimeSeconds - b.creationTimeSeconds)
+				.forEach(function(s) {
                     if (s.author.participantType === "MANAGER") { return; }
 
                     const author = s.author.members[0].handle;
@@ -98,17 +99,13 @@
                             start: s.creationTimeSeconds
                         }
                     }
-                    
-                    results[author].start = Math.min(results[author].start, s.creationTimeSeconds);
-                    results[author].standings[index].tries++;
-
-                    if (s.verdict !== "OK") { return; }
-                    
-                    if (results[author].standings[index].time == null) {
-                        results[author].standings[index].time = s.creationTimeSeconds;
-                    } else {
-                        results[author].standings[index].time = Math.min(results[author].standings[index].time, s.creationTimeSeconds);
-                    }
+					
+					if (results[author].standings[index].time !== null) { return; }
+					
+					results[author].standings[index].tries++;
+					if  (s.verdict === "OK") { 
+						results[author].standings[index].time = s.creationTimeSeconds; 
+					}
                 });
                 
                 var table = [];
@@ -164,7 +161,6 @@
                 const status = await get('contest.status', {contestId: contestId});
                 const problems = await get('contest.standings', {contestId: contestId});
                 console.log(status);
-                console.log(problems);
 				
 				if (status.status === 'FAILED') {
 					var message = document.getElementById("message");
