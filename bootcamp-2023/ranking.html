@@ -11,6 +11,87 @@
             apiKey = "060574c724691c0fce64f54c98fb43b633fc6a75";
             secret = "07b21f4f04f800949a672261ce8ad191419241c8";
 
+			let categorias = {
+				"1E": "#90CAF9",
+				"2E": "#42A5F5",
+				"3E": "#1E88E5",
+				"4E": "#1565C0",
+				"1B": "#9575CD",
+				"2B": "#673AB7",
+				"1C": "#B9F6CA",
+				"2C": "#69F0AE",
+				"3C": "#00E676",
+				"4C": "#00C853",
+				"G": "#FFAB00"
+			}
+
+			let participantes = {
+				// 1 ESO
+				"Brunco2": categorias["1E"],
+
+				// 2 ESO
+				"Ikeidjd": categorias["2E"],
+				"Hectorungo_18": categorias["2E"],
+				"davidvoica": categorias["2E"],
+
+				// 3 ESO
+
+				// 4 ESO
+
+				// 1 Bach
+
+				// 2 Bach
+				"Ikazura": categorias["2B"],
+
+				// 1 Carrera
+				"asenper": categorias["1C"],
+				"Chematix": categorias["1C"],
+				"Enzo_S": categorias["1C"],
+				"heyheyheeey": categorias["1C"],
+				"Vantelyn ": categorias["1C"],
+				"Maxlelyonaiss": categorias["1C"],
+				"jcussianovich": categorias["1C"],
+				"aoife_": categorias["1C"],
+				"HectoRRR": categorias["1C"],
+				"Vimapo": categorias["1C"],
+				"oganigl": categorias["1C"],
+				"aaJb": categorias["1C"],
+				"nina": categorias["1C"],
+				"pardoperezlucia": categorias["1C"],
+				"Isaa_614": categorias["1C"],
+				"andreantg": categorias["1C"],
+
+				// 2 Carrera
+				"spenny": categorias["2C"],
+				"malarflo": categorias["2C"],
+				"bsaez": categorias["2C"],
+				"juangarcia": categorias["2C"],
+				"Nebur": categorias["2C"],
+				"Draukar": categorias["2C"],
+				"guillem": categorias["2C"],
+				"Ruler73": categorias["2C"],
+				"TurtwigFilosofo": categorias["2C"],
+				"elenanito_23": categorias["2C"],
+				"Voper": categorias["2C"],
+				"ajimmed": categorias["2C"],
+
+				// 3 Carrera
+				"SergioCode": categorias["3C"],
+				"raul_ojeda22": categorias["3C"],
+				"teblas13": categorias["3C"],
+
+				// 4 Carrera
+				"maria18": categorias["4C"],
+				"rarepa": categorias["4C"],
+				"jaume2000": categorias["4C"],
+				"Htao01": categorias["4C"],
+
+				// Master y Graduados
+				"juan.garcia22": categorias["G"],
+				"rgonbar": categorias["G"],
+
+			}
+
             //https://stackoverflow.com/a/48161723/19424491
             async function sha256(message) {
                 const msgBuffer = new TextEncoder().encode(message);
@@ -57,6 +138,8 @@
                 var tbodyRef = document.getElementById(tableId).getElementsByTagName('tbody')[0];
 
                 var newRow = tbodyRef.insertRow();
+				newRow.style.backgroundColor = participantes[elements[0]];
+				console.log(newRow);
 
                 elements.forEach(function(content){
                     var newCell = newRow.insertCell();
@@ -211,10 +294,42 @@
 			#message {
 				color: red;
 			}
+
+			#categorias td {
+				padding: 0.5em;
+			}
+
+			hr {margin: 1em;}
         </style>
     </head>
     <body>
         <h1>Standings</h1>
+
+		<table id="categorias">
+		<thead>
+			<th colspan="12">Categorías</th>
+		</thead>
+		<tbody>
+		<tr>
+			<td style="background-color: #90CAF9;">1º ESO</td>
+			<td style="background-color: #42A5F5;">2º ESO</td>
+			<td style="background-color: #1E88E5;">3º ESO</td>
+			<td style="background-color: #1565C0;">4º ESO</td>
+			<td style="background-color: #9575CD;">1º Bach</td>
+			<td style="background-color: #673AB7;">2º Bach</td>
+			<td style="background-color: #B9F6CA;">1º Carrera</td>
+			<td style="background-color: #69F0AE;">2º Carrera</td>
+			<td style="background-color: #00E676;">3º Carrera</td>
+			<td style="background-color: #00C853;">4º Carrera+</td>
+			<td style="background-color: #FFAB00;">Master y Graduados</td>
+			<td>Sin Categoría</td>
+		</tr>
+		</tbody>
+		</table>
+
+		<p><span style="color: red;">Hey:</span> Para cambios en categorías podeis rellenar el Google Forms en <a href="https://forms.gle/JcfzT6Ant39KZZr36">https://forms.gle/JcfzT6Ant39KZZr36</a></p>
+
+		<hr>
 
         <select id="contest" onchange="contestChanged()">
             <option value="451675">Semana 1</option>
