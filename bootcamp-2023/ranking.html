@@ -147,7 +147,7 @@
 
                 var newRow = tbodyRef.insertRow();
 				newRow.style.backgroundColor = participantes[elements[0]];
-				console.log(newRow);
+				// console.log(newRow);
 
                 elements.forEach(function(content){
                     var newCell = newRow.insertCell();
@@ -245,13 +245,13 @@
 
                 table.sort((a, b) => b[1] - a[1] || a[2] - b[2]).forEach(r => insertRow("standings", r) );
                 
-                console.log(problems);
+                // console.log(problems);
             }
 
             async function update(contestId) {
                 const status = await get('contest.status', {contestId: contestId});
                 const problems = await get('contest.standings', {contestId: contestId});
-                console.log(status);
+                // console.log(status);
 				
 				if (status.status === 'FAILED') {
 					var message = document.getElementById("message");
@@ -369,8 +369,6 @@
 		<h2 id="message"></h2>
 
         <script>
-            contestChanged();
-
             function contestChanged() {
                 var table = document.getElementById("standings").getElementsByTagName('tbody')[0];
                 table.innerHTML = "";
@@ -380,6 +378,8 @@
                 message.innerHTML = "";
                 update(document.getElementById("contest").value);
             }
+
+            window.onload = contestChanged;
         </script>
     </body>
 </html>
